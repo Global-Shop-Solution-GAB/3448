@@ -1,0 +1,136 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Enter JE Description")
+gui.Form1..size(8220,1650)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.cmdOk.create(button)
+gui.Form1.cmdOk.caption("Ok")
+gui.Form1.cmdOk.visible(True)
+gui.Form1.cmdOk.size(855,375)
+gui.Form1.cmdOk.zorder(0)
+gui.Form1.cmdOk.position(6900,600)
+gui.Form1.cmdOk.enabled(True)
+gui.Form1.cmdOk.fontname("Arial")
+gui.Form1.cmdOk.fontsize(8)
+gui.Form1.cmdOk.event(click,cmdok_click)
+gui.Form1.txtDesc.create(textbox,"",True,7545,300,0,200,200,True,0,Arial,8,-2147483643,1)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+
+V.Global.sRet.Declare(String)
+
+
+F.Intrinsic.UI.ShowOpenFileDialog("",".csv","C:\",V.Global.sRet)
+
+F.Intrinsic.Control.If(V.Global.sRet,<>,"***CANCEL***")
+	Gui.Form1..Show
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.CallSub(Form1_unload)
+F.Intrinsic.Control.EndIf
+
+Program.Sub.Main.End
+
+program.sub.form1_unload.start
+
+f.Intrinsic.Control.End
+
+program.sub.form1_unload.end
+
+program.sub.cmdok_click.start
+
+Gui.Form1..Visible(false)
+
+V.Local.sFile.Declare(String)
+V.Local.sCells.Declare(String)
+V.Local.sLine.Declare(String)
+V.Local.sGLAcct.Declare(String)
+V.Local.sAmount.Declare(String)
+V.Local.fAmount.Declare(Float)
+V.Local.sFileLoc.Declare(String)
+V.Local.sDate.Declare(String)
+V.Local.sParam.Declare(String)
+V.Local.sFileName.Declare(String)
+V.Local.sUser.Declare(String)
+V.Local.sNeg.Declare(String)
+
+
+V.Local.lRow.Declare(Long)
+V.Local.lHndl.Declare(Long)
+
+F.Intrinsic.String.Format(V.Ambient.Date,"yymmdd",V.Local.sDate)
+F.Intrinsic.String.Concat("JE",V.Caller.Terminal,"_",V.Local.sDate,V.Local.sFilename)
+	F.Intrinsic.String.RPad(V.Local.sFilename,"x",12,V.Local.sFilename)
+F.Intrinsic.String.Concat(V.Caller.FilesDir,"\",V.Local.sFilename,V.Local.sFileLoc)
+
+
+F.Intrinsic.File.GetHandle(V.Local.lHndl)
+F.Intrinsic.File.OpenForWrite(V.Local.sFileLoc,V.Local.lHndl)
+
+F.Intrinsic.File.File2String(V.Global.sRet,V.Local.sFile)
+	F.Intrinsic.String.Replace(V.Local.sFile,V.Ambient.DblQuote,"",V.Local.sFile)
+	F.Intrinsic.String.Split(V.Local.sFile,V.Ambient.NewLine,V.Local.sFile)
+	F.Intrinsic.Control.For(V.Local.lRow,V.Local.sFile.LBound,V.Local.sFile.UBound,1)
+
+		F.Intrinsic.String.Split(V.Local.sFile(v.Local.lRow),",",V.Local.sCells)
+			V.Local.sCells.RedimPreserve(0,12)
+		F.Intrinsic.Control.If(V.Local.sCells(0),<>,"")
+			F.Intrinsic.Control.If(V.Local.sCells(12),<>,"")
+				F.Intrinsic.String.Concat(V.Local.sCells(7),V.Local.sCells(8),V.Local.sCells(7))
+				V.Local.sCells(8).Set(V.Local.sCells(9))
+			F.Intrinsic.Control.EndIf
+
+			V.Local.sGLAcct.Set(V.Local.sCells(8))
+			F.Intrinsic.String.RPad(V.Local.sGLAcct," ",15,V.Local.sGLAcct)
+
+			V.Local.fAmount.Set(V.Local.sCells(7))
+			F.Intrinsic.String.Format(V.Local.fAmount,"0.00",V.Local.sAmount)
+
+					F.Intrinsic.String.Left(V.Local.sAmount,1,V.Local.sNeg)
+					F.Intrinsic.Control.If(V.Local.sNeg,=,"-")
+						F.Intrinsic.String.Replace(V.Local.sAmount,"-","",V.Local.sAmount)
+						F.Intrinsic.String.Concat(V.Local.sAmount,"-",V.Local.sAmount)
+					F.Intrinsic.Control.EndIf
+
+
+
+'		F.Intrinsic.Control.If(V.Local.sCells(0),<>,"")
+			F.Intrinsic.String.Concat(V.Local.sGLAcct,",",V.Local.sAmount,",,,,,",V.Screen.Form1!txtDesc.Text,V.Local.sLine)
+			F.Intrinsic.File.WriteLine(V.Local.lHndl,V.Local.sLine)
+		F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.Next(V.Local.lRow)
+
+F.Intrinsic.File.CloseFile(V.Local.lHndl)
+
+F.Intrinsic.String.RPad(V.Caller.User," ",8,V.Local.sUser)
+F.Intrinsic.String.Concat(V.Ambient.DblQuote,V.Caller.CompanyCode,V.Local.sFileName,V.Local.sUser,V.Ambient.DblQuote,V.Local.sParam)
+	F.Intrinsic.Task.LaunchGSSSync("XGL004","-c",V.Local.sParam)
+
+
+F.Intrinsic.Control.CallSub(Form1_unload)
+
+program.sub.cmdok_click.end
+
+
